@@ -1,0 +1,49 @@
+name: Update MILB Player Index
+
+on:
+  schedule:
+    # Daily at 08:00 UTC (4:00 AM EDT)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run build script
+        run: node build-milb-index.mjs
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet public/milb-player-index.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "📊 No changes detected"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Changes detected in player index"
+          fi
+
+      - name: Configure Git
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Commit and push
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git add public/milb-player-index.json
+          git commit -m "chore: update MILB player index [skip ci]"
+          git push
