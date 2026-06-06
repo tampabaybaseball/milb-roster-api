@@ -1,4 +1,4 @@
-# MILB Roster API
+# MiLB Roster API
 
 This repository serves as a static API backend that provides minor league baseball player data via GitHub Pages.
 
